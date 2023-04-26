@@ -14,7 +14,7 @@ public class ModuleIOSim implements ModuleIO {
 
 	private double steerRelativePositionRad = 0.0;
 	private double steerAbsolutePositionRad = Math.random() * 2.0 * Math.PI;
-	private double driveAppliedVolts = 3;
+	private double driveAppliedVolts = 0.0;
 	private double steerAppliedVolts = 0.0;
 
 	public ModuleIOSim(int index) {
@@ -22,7 +22,6 @@ public class ModuleIOSim implements ModuleIO {
 		System.out.println("[Init] Creating ModuleIOSim"+Integer.toString(index));
 	}
 
-	@Override
 	public void updateInputs(ModuleIOInputs inputs) {
 		driveSim.update(RobotConstants.kLoopPeriodSecs);
 		steerSim.update(RobotConstants.kLoopPeriodSecs);
@@ -41,6 +40,9 @@ public class ModuleIOSim implements ModuleIO {
 			inputs.drivePositionRad
 				+ (driveSim.getAngularVelocityRadPerSec() * RobotConstants.kLoopPeriodSecs);
 		inputs.driveVelocityRadPerSec = driveSim.getAngularVelocityRadPerSec();
+		if (driveAppliedVolts > 0.01 || driveAppliedVolts < -0.01) {
+			System.out.println("[Module][driveVolts] Get: " + Double.toString(driveAppliedVolts));
+		}
 		inputs.driveAppliedVolts = driveAppliedVolts;
 		inputs.driveCurrentAmps = new double[] {Math.abs(driveSim.getCurrentDrawAmps())};
 		inputs.driveTempCelcius = new double[] {};
@@ -53,16 +55,14 @@ public class ModuleIOSim implements ModuleIO {
 		inputs.steerTempCelcius = new double[] {};
 	}
 
-	@Override
 	public void setDriveVoltage(double volts) {
-		driveAppliedVolts = volts; //MathUtil.clamp(volts, -12.0, 12.0);
-		if (volts > 0.01 || volts < -0.01) {
-			System.out.println("[Module] got volts bitch!");
+		driveAppliedVolts = MathUtil.clamp(volts, -12.0, 12.0);
+		if (driveAppliedVolts > 0.01 || driveAppliedVolts < -0.01) {
+			System.out.println("[Module] setDriveVolts: " + Double.toString(driveAppliedVolts));
 		}
-		driveSim.setInputVoltage(driveAppliedVolts);
+		driveSim.setInput(driveAppliedVolts);
 	}
 
-	@Override
 	public void setSteerVoltage(double volts) {
 		steerAppliedVolts = MathUtil.clamp(volts, -12.0, 12.0);
 		steerSim.setInputVoltage(steerAppliedVolts);

@@ -79,9 +79,9 @@ public final class RobotConstants {
 
 		// constants used when using the on-Rio PID controls in simulation
 		protected static final SwerveMotorPIDConstants kSimDrivePIDConstants = 
-			new SwerveMotorPIDConstants(1, 0.0, 0.1, 0.2);
+			new SwerveMotorPIDConstants(0.9, 0.0, 0.1, 0.2);
 		protected static final SwerveMotorPIDConstants kSimSteerPIDConstants = 
-			new SwerveMotorPIDConstants(1, 0);	
+			new SwerveMotorPIDConstants(10, 0);	
 
 		// constants used when using the on-Rio PID controls on real hardware
 		private static final SwerveMotorPIDConstants kOffboardDrivePIDConstants = 

@@ -8,8 +8,6 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import frc.team2974.robot.RobotConstants;
 import frc.team2974.robot.RobotConstants.SwerveModuleK.ModuleConstants;
-import frc.team2974.util.CTREModuleState;
-import frc.team2974.util.Conversions;
 import frc.team6328.util.LoggedTunableNumber;
 
 import static frc.team2974.robot.RobotConstants.SwerveK;
@@ -60,19 +58,11 @@ public class Module {
 
 		// Update controllers if tunable numbers have changed
 		if (driveKp_.hasChanged(driveKp_.hashCode()) || driveKd_.hasChanged(driveKd_.hashCode())) {
-			// if (SwerveK.kOnboardClosedLoop) {
-				driveFeedback_.setPID(driveKp_.get(), 0.0, driveKd_.get());
-			// } else {
-				// io_.setOffboardDrivePID(driveKp_.get(), driveKd_.get());
-			// }
+			driveFeedback_.setPID(driveKp_.get(), 0.0, driveKd_.get());
 		}
 
 		if (turnKp_.hasChanged(turnKp_.hashCode()) || turnKd_.hasChanged(turnKd_.hashCode())) {
-			// if (SwerveK.kOnboardClosedLoop) {
-				steerFeedback_.setPID(turnKp_.get(), 0.0, turnKd_.get());
-			// } else {
-				// io_.setOffboardDrivePID(turnKp_.get(), turnKd_.get());
-			// }
+			steerFeedback_.setPID(turnKp_.get(), 0.0, turnKd_.get());
 		}
 
 		if (driveKs_.hasChanged(driveKs_.hashCode()) || driveKv_.hasChanged(driveKv_.hashCode())) {
@@ -81,41 +71,25 @@ public class Module {
 	}
 
 	public SwerveModuleState runSetpoint(SwerveModuleState state) {
-		var optimizedState = //SwerveK.kOnboardClosedLoop ?
-			SwerveModuleState.optimize(state, getAngle());// :
-			// CTREModuleState.optimize(state, getAngle());
+		var optimizedState = SwerveModuleState.optimize(state, getAngle());
 
-		// if (SwerveK.kOnboardClosedLoop) {
-			var steerCurAngle = getAngle().getRadians();
-			var steerDesAngle = optimizedState.angle.getRadians();
-			var steerEffort = steerFeedback_.calculate(steerCurAngle, steerDesAngle);
-			Logger.getInstance().recordOutput("Module/"+index_+"/SteerEffort", steerEffort);
-			io_.setSteerVoltage(steerEffort);
-		// } else {
-		// 	io_.setOffboardSteerAngle(
-		// 		Conversions.degreesToFalcon(
-		// 			optimizedState.angle.getDegrees(),
-		// 			SwerveModuleK.kSteerRatio));
-		// }
+		var steerCurAngle = getAngle().getRadians();
+		var steerDesAngle = optimizedState.angle.getRadians();
+		var steerEffort = steerFeedback_.calculate(steerCurAngle, steerDesAngle);
+		Logger.getInstance().recordOutput("Module/"+index_+"/SteerEffort", steerEffort);
+		io_.setSteerVoltage(steerEffort);
 
 		// Update velocity based on turn error
     // optimizedState.speedMetersPerSecond *= Math.cos(steerFeedback_.getPositionError());
 
 		// Run drive controller
     double velocityRadPerSec = optimizedState.speedMetersPerSecond / wheelRadius_.get();
-		// if (SwerveK.kOnboardClosedLoop) {
 		var ffEffort = driveFeedforward_.calculate(velocityRadPerSec);
 		var fbEffort = driveFeedback_.calculate(inputs_.driveVelocityRadPerSec, velocityRadPerSec);
 		Logger.getInstance().recordOutput("Module/"+index_+"/DriveFFEffort", ffEffort);
 		Logger.getInstance().recordOutput("Module/"+index_+"/DriveFBEffort", fbEffort);
-		io_.setDriveVoltage(ffEffort);
-		// } else {
-		// 	io_.setOffboardDriveVelocity(
-		// 		Conversions.MPSToFalcon(
-		// 			optimizedState.speedMetersPerSecond,
-		// 			wheelRadius_.get() * 2 * Math.PI,
-		// 			SwerveModuleK.kDriveRatio));
-		// }
+		io_.setDriveVoltage(ffEffort + 3);
+
 
 		return optimizedState;
 	}
@@ -126,13 +100,13 @@ public class Module {
    */
   public void runCharacterization(double volts) {
     io_.setSteerVoltage(steerFeedback_.calculate(getAngle().getRadians(), 0.0));
-    // io_.setDriveVoltage(volts);
+    io_.setDriveVoltage(volts);
   }
 
 	/** Disables all outputs to motors. */
 	public void stop() {
 		io_.setSteerVoltage(0.0);
-		// io_.setDriveVoltage(0.0);
+		io_.setDriveVoltage(0.0);
 	}
 
 	/** Sets whether brake mode is enabled. */
